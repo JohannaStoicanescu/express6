@@ -1,8 +1,58 @@
 const database = require("./database");
 
-const getUsers = (req, res) => {
+/*const getUsers = (req, res) => {
+  let sql = "select * from users";
+  const sqlValues = [];
+
+  if (req.query.language == "English") {
+    sql += " where language = ?";
+    sqlValues.push(req.query.language);
+  }
+  if (req.query.city == "Paris") {
+    sql += " where city = ?";
+    sqlValues.push(req.query.city);
+  }
+  
+
   database
-    .query("select * from users")
+    .query(sql, sqlValues)
+    .then(([users]) => {
+      res.json(users);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
+    });
+};*/
+
+const getUsers = (req, res) => {
+  const initialSql = "select * from users";
+  const where = [];
+
+  if (req.query.language == "English") {
+    where.push({
+      column: "language",
+      value: req.query.language,
+      operator: "=",
+    });
+  }
+  if (req.query.city == "Paris") {
+    where.push({
+      column: "city",
+      value: req.query.city,
+      operator: "=",
+    });
+  }
+
+  database
+    .query(
+      where.reduce(
+        (sql, { column, operator }, index) =>
+          `${sql} ${index === 0 ? "where" : "and"} ${column} ${operator} ?`,
+        initialSql
+      ),
+      where.map(({ value }) => value)
+    )
     .then(([users]) => {
       res.json(users);
     })
